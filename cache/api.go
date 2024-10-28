@@ -1,4 +1,4 @@
-package api
+package cache
 
 import (
 	"context"
@@ -6,15 +6,12 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/abinay-ps/cache/cache"
-	"github.com/abinay-ps/cache/redis"
-
 	"github.com/creativecreature/sturdyc"
 )
 
 type API struct {
 	*sturdyc.Client[string]
-	RedisClient   *redis.RedisClient
+	RedisClient   *RedisClient
 	DatabaseCalls uint64
 	RedisCalls    uint64
 }
@@ -33,9 +30,9 @@ type API struct {
 
 func NewAPI(addr string, password string, index int) (*API, error) {
 
-	c := cache.NewCacheClient()
+	c := NewCacheClient()
 
-	redisClient := redis.NewRedisClient(addr, password, index)
+	redisClient := NewRedisClient(addr, password, index)
 	// if redisClient.Client == nil {
 	// 	fmt.Println("Warning: Redis is unavailable, continuing without Redis cache.")
 	// }
@@ -93,7 +90,7 @@ func fetchFromRedis[T any](a *API, ctx context.Context, key string) (*T, error) 
 	if a.RedisClient == nil {
 		return nil, nil
 	}
-	descriptions := redis.Get[T](a.RedisClient, ctx, key)
+	descriptions := Get[T](a.RedisClient, ctx, key)
 	// if descriptions != nil {
 	// 	fmt.Println("Data from Redis")
 	// }
