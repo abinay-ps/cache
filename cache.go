@@ -1,6 +1,8 @@
 package cache
 
 import (
+	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/creativecreature/sturdyc"
@@ -32,4 +34,12 @@ func NewCacheClient() *sturdyc.Client[string] {
 		sturdyc.WithEarlyRefreshes(minRefreshDelay, maxRefreshDelay, retryBaseDelay),
 		sturdyc.WithRefreshCoalescing(batchSize, batchBufferTimeout))
 
+}
+
+func SetLocal[T any](c *sturdyc.Client[string], ctx context.Context, key string, value *T) {
+	json, err := json.Marshal(value)
+	if err != nil {
+		panic(err)
+	}
+	c.Set(key, string(json))
 }
