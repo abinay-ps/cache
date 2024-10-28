@@ -36,10 +36,14 @@ func NewCacheClient() *sturdyc.Client[string] {
 
 }
 
-func SetLocal[T any](c *sturdyc.Client[string], ctx context.Context, key string, value *T) {
+func SetLocalKey[T any](c *sturdyc.Client[string], ctx context.Context, key string, value *T) {
 	json, err := json.Marshal(value)
 	if err != nil {
 		panic(err)
 	}
 	c.Set(key, string(json))
+}
+
+func DeleteLocalKey(c *sturdyc.Client[string], ctx context.Context, key string) {
+	c.Delete(key)
 }

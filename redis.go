@@ -30,7 +30,7 @@ func NewRedisClient(addr string, password string, index int) *RedisClient {
 	return &RedisClient{Client: rdb}
 }
 
-func SetRedis[T any](r *RedisClient, ctx context.Context, key string, value *T) {
+func SetRedisKey[T any](r *RedisClient, ctx context.Context, key string, value *T) {
 	json, err := json.Marshal(value)
 	if err != nil {
 		panic(err)
@@ -40,7 +40,7 @@ func SetRedis[T any](r *RedisClient, ctx context.Context, key string, value *T) 
 	}
 }
 
-func GetRedis[T any](r *RedisClient, ctx context.Context, key string) *T {
+func GetRedisKey[T any](r *RedisClient, ctx context.Context, key string) *T {
 	if r.Client != nil {
 		val, err := r.Client.Get(ctx, key).Result()
 		if err != nil {
@@ -56,8 +56,20 @@ func GetRedis[T any](r *RedisClient, ctx context.Context, key string) *T {
 	return nil
 }
 
-func DeleteRedis(r *RedisClient, ctx context.Context, key string) {
+func DeleteRedisKey(r *RedisClient, ctx context.Context, key string) {
 	if r.Client != nil {
 		r.Client.Del(ctx, key)
+	}
+}
+
+func FlushAllRedisDBs(r *RedisClient, ctx context.Context) {
+	if r.Client != nil {
+		r.Client.FlushAll(ctx)
+	}
+}
+
+func FlushCurrentRedisDB(r *RedisClient, ctx context.Context) {
+	if r.Client != nil {
+		r.Client.FlushDB(ctx)
 	}
 }
