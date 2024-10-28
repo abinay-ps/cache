@@ -35,7 +35,7 @@ func GetVal[T any](a *API, ctx context.Context, key string) (*T, error) {
 	fetchFn := func(ctx context.Context) (string, error) {
 		// count = true
 		// fmt.Println("Inside fetchFn function")
-		if a.RedisClient != nil {
+		if a.RedisClient.Client != nil {
 			val, err := fetchFromRedis[T](a, ctx, key)
 			if err != nil {
 				return "", err
@@ -51,10 +51,15 @@ func GetVal[T any](a *API, ctx context.Context, key string) (*T, error) {
 		}
 		return "", nil
 	}
-
-	strVal, err := a.GetOrFetch(ctx, key, fetchFn)
-	if err != nil {
-		return nil, err
+	var strVal string
+	var err error
+	if a.RedisClient.Client != nil {
+		strVal, err = a.GetOrFetch(ctx, key, fetchFn)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		strVal, _ = a.Get(key)
 	}
 	// if !count {
 	// 	fmt.Println("Data from Local Cache")
