@@ -79,7 +79,7 @@ func fetchFromRedis[T any](a *API, ctx context.Context, key string) (*T, error) 
 	if a.RedisClient == nil {
 		return nil, nil
 	}
-	descriptions := Get[T](a.RedisClient, ctx, key)
+	descriptions := GetRedis[T](a.RedisClient, ctx, key)
 	// if descriptions != nil {
 	// 	fmt.Println("Data from Redis")
 	// }

@@ -30,7 +30,7 @@ func NewRedisClient(addr string, password string, index int) *RedisClient {
 	return &RedisClient{Client: rdb}
 }
 
-func Set[T any](r *RedisClient, ctx context.Context, key string, value *T) {
+func SetRedis[T any](r *RedisClient, ctx context.Context, key string, value *T) {
 	json, err := json.Marshal(value)
 	if err != nil {
 		panic(err)
@@ -40,7 +40,7 @@ func Set[T any](r *RedisClient, ctx context.Context, key string, value *T) {
 	}
 }
 
-func Get[T any](r *RedisClient, ctx context.Context, key string) *T {
+func GetRedis[T any](r *RedisClient, ctx context.Context, key string) *T {
 	if r.Client != nil {
 		val, err := r.Client.Get(ctx, key).Result()
 		if err != nil {
@@ -56,7 +56,7 @@ func Get[T any](r *RedisClient, ctx context.Context, key string) *T {
 	return nil
 }
 
-func Delete(r *RedisClient, ctx context.Context, key string) {
+func DeleteRedis(r *RedisClient, ctx context.Context, key string) {
 	if r.Client != nil {
 		r.Client.Del(ctx, key)
 	}
