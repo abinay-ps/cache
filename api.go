@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"sync"
 	"sync/atomic"
 
@@ -16,26 +17,14 @@ type API struct {
 	RedisCalls    uint64
 }
 
-// func NewAPI(cfg config.Econfig) (*API, error) {
-
-// 	c := cache.NewCacheClient()
-
-// 	redisClient := redis.NewRedisClient(cfg)
-// 	if redisClient.Client == nil {
-// 		fmt.Println("Warning: Redis is unavailable, continuing without Redis cache.")
-// 	}
-
-// 	return &API{c, redisClient, 0, 0}, nil
-// }
-
 func NewAPI(addr string, password string, index int) (*API, error) {
 
 	c := NewCacheClient()
 
 	redisClient := NewRedisClient(addr, password, index)
-	// if redisClient.Client == nil {
-	// 	fmt.Println("Warning: Redis is unavailable, continuing without Redis cache.")
-	// }
+	if redisClient.Client == nil {
+		return &API{c, redisClient, 0, 0}, errors.New("error initializing redis client")
+	}
 
 	return &API{c, redisClient, 0, 0}, nil
 }
