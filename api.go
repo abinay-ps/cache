@@ -35,21 +35,18 @@ func GetVal[T any](a *API, ctx context.Context, key string) (*T, error) {
 	fetchFn := func(ctx context.Context) (string, error) {
 		// count = true
 		// fmt.Println("Inside fetchFn function")
-		if a.RedisClient.Client != nil {
-			val, err := fetchFromRedis[T](a, ctx, key)
-			if err != nil {
-				return "", err
-			}
-			if val == nil {
-				return "", err
-			}
-			jsonVal, err := json.Marshal(val)
-			if err != nil {
-				return "", err
-			}
-			return string(jsonVal), nil
+		// if a.RedisClient.Client != nil {
+		val := fetchFromRedis[T](a, ctx, key)
+		if val == nil {
+			return "", nil
 		}
-		return "", nil
+		jsonVal, err := json.Marshal(val)
+		if err != nil {
+			return "", err
+		}
+		return string(jsonVal), nil
+		// }
+		// return "", nil
 	}
 	strVal, err := a.GetOrFetch(ctx, key, fetchFn)
 	if err != nil {
@@ -73,17 +70,17 @@ func GetVal[T any](a *API, ctx context.Context, key string) (*T, error) {
 	return &result, nil
 }
 
-func fetchFromRedis[T any](a *API, ctx context.Context, key string) (*T, error) {
+func fetchFromRedis[T any](a *API, ctx context.Context, key string) *T {
 	atomic.AddUint64(&a.RedisCalls, 1)
 	// fmt.Println("Inside fetchFromDatabase1 function")
 	if a.RedisClient == nil {
-		return nil, nil
+		return nil
 	}
 	descriptions := GetRedisKey[T](a.RedisClient, ctx, key)
 	// if descriptions != nil {
 	// 	fmt.Println("Data from Redis")
 	// }
-	return descriptions, nil
+	return descriptions
 }
 
 func Fetch[T any](api *API, key string) (*T, error) {
