@@ -51,16 +51,11 @@ func GetVal[T any](a *API, ctx context.Context, key string) (*T, error) {
 		}
 		return "", nil
 	}
-	var strVal string
-	var err error
-	if a.RedisClient.Client != nil {
-		strVal, err = a.GetOrFetch(ctx, key, fetchFn)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		strVal, _ = a.Get(key)
+	strVal, err := a.GetOrFetch(ctx, key, fetchFn)
+	if err != nil {
+		return nil, err
 	}
+
 	// if !count {
 	// 	fmt.Println("Data from Local Cache")
 	// }
