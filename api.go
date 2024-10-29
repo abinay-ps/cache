@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"reflect"
 	"sync"
 	"sync/atomic"
 
@@ -101,4 +103,84 @@ func Fetch[T any](api *API, key string) (*T, error) {
 	wg.Wait()
 	// log.Printf("Total Redis calls: %d\n", api.RedisCalls)
 	return values, err
+}
+
+type Handler interface {
+	GetAPI() *API
+}
+
+func ReturnNilOrZero[T any]() T {
+	var result T
+	if reflect.ValueOf(result).IsNil() {
+		return result // This will be nil for pointers and interfaces
+	}
+	return result // This will return the zero value for non-nilable types
+}
+
+func DataFetch[T any](handler Handler, rserver string, rpwd string, rindex int, key string, fn any, args ...any) (T, error) {
+	if handler.GetAPI().RedisClient.Client == nil {
+		redisClient := NewRedisClient(rserver, rpwd, rindex)
+		if redisClient != nil {
+			handler.GetAPI().RedisClient = redisClient
+		}
+	}
+	values, _ := Fetch[T](handler.GetAPI(), key)
+	if values != nil {
+		return *values, nil
+	}
+	fnValue := reflect.ValueOf(fn)
+	fnType := fnValue.Type()
+
+	if len(args) != fnType.NumIn() {
+		return ReturnNilOrZero[T](), fmt.Errorf("expected %d arguments, got %d", fnType.NumIn(), len(args))
+	}
+
+	in := make([]reflect.Value, len(args))
+	for i, arg := range args {
+		argValue := reflect.ValueOf(arg)
+		if argValue.Type() != fnType.In(i) {
+			return ReturnNilOrZero[T](), fmt.Errorf("argument %d expected type %s, got %s", i, fnType.In(i), argValue.Type())
+		}
+		in[i] = argValue
+	}
+
+	results := fnValue.Call(in)
+	if len(results) == 0 {
+		var zero *T
+		if handler.GetAPI().RedisClient != nil {
+			SetRedisKey[T](handler.GetAPI().RedisClient, context.Background(), key, zero)
+		}
+		SetLocalKey(handler.GetAPI().Client, context.Background(), key, zero)
+		return ReturnNilOrZero[T](), nil
+	}
+
+	if len(results) == 1 {
+		if err, ok := results[0].Interface().(error); ok {
+			return ReturnNilOrZero[T](), err
+		}
+		value, ok := results[0].Interface().(T)
+		if !ok {
+			return ReturnNilOrZero[T](), fmt.Errorf("expected return type %T, got %T", (*new(T)), results[0].Interface())
+		}
+		if handler.GetAPI().RedisClient != nil {
+			SetRedisKey[T](handler.GetAPI().RedisClient, context.Background(), key, &value)
+		}
+		SetLocalKey(handler.GetAPI().Client, context.Background(), key, &value)
+		return value, nil
+	}
+	if len(results) == 2 {
+		value, ok := results[0].Interface().(T)
+		if !ok {
+			return ReturnNilOrZero[T](), fmt.Errorf("expected return type %T, got %T", (*new(T)), results[0].Interface())
+		}
+		if err, ok := results[1].Interface().(error); ok && err != nil {
+			return ReturnNilOrZero[T](), err
+		}
+		if handler.GetAPI().RedisClient != nil {
+			SetRedisKey[T](handler.GetAPI().RedisClient, context.Background(), key, &value)
+		}
+		SetLocalKey(handler.GetAPI().Client, context.Background(), key, &value)
+		return value, nil
+	}
+	return ReturnNilOrZero[T](), nil
 }
