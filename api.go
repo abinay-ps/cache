@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"runtime"
 	"sync"
 	"sync/atomic"
 
@@ -132,14 +133,14 @@ func DataFetch[T any](handler Handler, rserver string, rpwd string, rindex int, 
 	fnType := fnValue.Type()
 
 	if len(args) != fnType.NumIn() {
-		return ReturnNilOrZero[T](), fmt.Errorf("expected %d arguments, got %d while calling function %v", fnType.NumIn(), len(args), fn)
+		return ReturnNilOrZero[T](), fmt.Errorf("expected %d arguments, got %d while calling function %v", fnType.NumIn(), len(args), runtime.FuncForPC(fnValue.Pointer()).Name())
 	}
 
 	in := make([]reflect.Value, len(args))
 	for i, arg := range args {
 		argValue := reflect.ValueOf(arg)
 		if argValue.Type() != fnType.In(i) {
-			return ReturnNilOrZero[T](), fmt.Errorf("argument %d expected type %s, got %s while calling function %v", i, fnType.In(i), argValue.Type(), fn)
+			return ReturnNilOrZero[T](), fmt.Errorf("argument %d expected type %s, got %s while calling function %v", i, fnType.In(i), argValue.Type(), runtime.FuncForPC(fnValue.Pointer()).Name())
 		}
 		in[i] = argValue
 	}
