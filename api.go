@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/creativecreature/sturdyc"
 )
@@ -20,9 +21,12 @@ type API struct {
 	RedisCalls    uint64
 }
 
-func NewAPI(addr string, password string, index int) (*API, error) {
+func NewAPI(addr string, password string, index int, capacity int, shards int, batchSize int,
+	batchBufferTimeout time.Duration, evictionPercentage int, maxRefreshDelay time.Duration,
+	minRefreshDelay time.Duration, retryBaseDelay time.Duration, ttl time.Duration) (*API, error) {
 
-	c := NewCacheClient()
+	c := NewCacheClient(capacity, shards, batchSize, batchBufferTimeout, evictionPercentage,
+		maxRefreshDelay, minRefreshDelay, retryBaseDelay, ttl)
 
 	redisClient := NewRedisClient(addr, password, index)
 	if redisClient.Client == nil {
