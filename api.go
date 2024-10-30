@@ -37,12 +37,7 @@ func NewAPI(addr string, password string, index int, capacity int, shards int, b
 }
 
 func GetVal[T any](a *API, ctx context.Context, key string) (*T, error) {
-	// count := false
-
 	fetchFn := func(ctx context.Context) (string, error) {
-		// count = true
-		// fmt.Println("Inside fetchFn function")
-		// if a.RedisClient.Client != nil {
 		val := fetchFromRedis[T](a, ctx, key)
 		if val == nil {
 			return "", nil
@@ -52,17 +47,11 @@ func GetVal[T any](a *API, ctx context.Context, key string) (*T, error) {
 			return "", err
 		}
 		return string(jsonVal), nil
-		// }
-		// return "", nil
 	}
 	strVal, err := a.GetOrFetch(ctx, key, fetchFn)
 	if err != nil {
 		return nil, err
 	}
-
-	// if !count {
-	// 	fmt.Println("Data from Local Cache")
-	// }
 	if strVal == "" {
 		a.Delete(key)
 		return nil, nil
@@ -79,14 +68,10 @@ func GetVal[T any](a *API, ctx context.Context, key string) (*T, error) {
 
 func fetchFromRedis[T any](a *API, ctx context.Context, key string) *T {
 	atomic.AddUint64(&a.RedisCalls, 1)
-	// fmt.Println("Inside fetchFromDatabase1 function")
 	if a.RedisClient == nil {
 		return nil
 	}
 	descriptions := GetRedisKey[T](a.RedisClient, ctx, key)
-	// if descriptions != nil {
-	// 	fmt.Println("Data from Redis")
-	// }
 	return descriptions
 }
 
@@ -94,19 +79,12 @@ func Fetch[T any](api *API, key string) (*T, error) {
 	var wg sync.WaitGroup
 	var values *T
 	var err error
-
 	wg.Add(1)
 	go func() {
-		// startTime := time.Now()
 		values, err = GetVal[T](api, context.Background(), key)
-		// elapsedTime := time.Since(startTime).Milliseconds()
-		//log.Printf("got values: %v\n", values)
-		// log.Printf("Time taken to fetch: %v ms\n", elapsedTime)
 		wg.Done()
 	}()
-
 	wg.Wait()
-	// log.Printf("Total Redis calls: %d\n", api.RedisCalls)
 	return values, err
 }
 
@@ -117,12 +95,12 @@ type Handler interface {
 func ReturnNilOrZero[T any]() T {
 	var result T
 	if reflect.ValueOf(result).IsNil() {
-		return result // This will be nil for pointers and interfaces
+		return result
 	}
-	return result // This will return the zero value for non-nilable types
+	return result
 }
 
-func DataFetch[T any](handler Handler, rserver string, rpwd string, rindex int, key string, fn any, args ...any) (T, error) {
+func FetchData[T any](handler Handler, rserver string, rpwd string, rindex int, key string, fn any, args ...any) (T, error) {
 	if handler.GetAPI().RedisClient.Client == nil {
 		redisClient := NewRedisClient(rserver, rpwd, rindex)
 		if redisClient != nil {
