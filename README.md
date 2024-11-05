@@ -1,5 +1,5 @@
 # Cache Library for IT 2.0 application
-This library aims to utilize Local Cache and Redis Cache for caching the responses for better performance of IT 2.0 applications.
+This library aims to achieve cache implementation for improve API performance by reducing latency and load on the database. This will be achieved by introducing a two-layer caching system: Redis Cache (shared cache) and Local Cache (instance-specific cache). The cache layers will store frequently accessed data to minimize repeated database calls and improve response times. A single function "FetchData" can be used instead of calling repo functions for Cache benefits.
 
 ## Installation
 To install Cache Library, run:
@@ -20,14 +20,12 @@ import "github.com/abinay-ps/cache"
 ```go
 func DeleteLocalKey(c *sturdyc.Client[string], ctx context.Context, key string)
 func DeleteRedisKey(r *RedisClient, ctx context.Context, key string)
-func Fetch[T any](cache *Cache, key string) (*T, error)
 func FetchData[T any](handler Handler, key string, fn any, args ...any) (T, error)
 func FlushAllRedisDBs(r *RedisClient, ctx context.Context)
 func FlushCurrentRedisDB(r *RedisClient, ctx context.Context)
 func GetRedisKey[T any](r *RedisClient, ctx context.Context, key string) *T
 func GetVal[T any](a *Cache, ctx context.Context, key string) (*T, error)
 func NewCacheClient(capacity int, shards int, batchSize int, batchBufferTimeout time.Duration, evictionPercentage int, maxRefreshDelay time.Duration, minRefreshDelay time.Duration, retryBaseDelay time.Duration, ttl time.Duration) *sturdyc.Client[string]
-func ReturnNilOrZero[T any]() T
 func SetLocalKey[T any](c *sturdyc.Client[string], ctx context.Context, key string, value *T)
 func SetRedisKey[T any](r *RedisClient, ctx context.Context, key string, value *T)
 func NewCache(addr string, password string, index int, capacity int, shards int, batchSize int, batchBufferTimeout time.Duration, evictionPercentage int, maxRefreshDelay time.Duration, minRefreshDelay time.Duration, retryBaseDelay time.Duration, ttl time.Duration) (*Cache, error)
@@ -35,6 +33,7 @@ func NewRedisClient(addr string, password string, index int) *RedisClient
 ```
 
 ## Interface: type Handler
+The GetCache() function needs to be implemented by the handlers whereever cache needs to be implemented.
 ```go
 type Handler interface {
     GetCache() *Cache
