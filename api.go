@@ -55,7 +55,7 @@ func NewAPI(addr string, password string, index int, capacity int, shards int, b
 
 	redisClient := NewRedisClient(addr, password, index)
 	if redisClient.Client == nil {
-		return &API{c, redisClient, 0, 0, "", "", 0}, errors.New("error initializing redis client")
+		return &API{c, redisClient, 0, 0, addr, password, index}, errors.New("error initializing redis client")
 	}
 
 	return &API{c, redisClient, 0, 0, addr, password, index}, nil
