@@ -5,7 +5,7 @@ This library aims to achieve cache implementation for improve API performance by
 To install Cache Library, run:
 
 ```bash
-go get github.com/abinay-ps/cache
+go get gitlab.cept.gov.in/it-2.0-common/cache
 ```
 
 ## Usage
@@ -13,7 +13,7 @@ go get github.com/abinay-ps/cache
 ### Importing the Library
 
 ```go
-import "github.com/abinay-ps/cache"
+import "gitlab.cept.gov.in/it-2.0-common/cache"
 ```
 
 ## Index
@@ -33,7 +33,7 @@ func NewRedisClient(addr string, password string, index int) *RedisClient
 ```
 
 ## Interface: type Handler
-The GetCache() function needs to be implemented by the handlers whereever cache needs to be implemented.
+The GetCache() function needs to be implemented by all the handlers whereever cache needs to be implemented.
 ```go
 type Handler interface {
     GetCache() *Cache
