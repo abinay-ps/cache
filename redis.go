@@ -14,6 +14,7 @@ type RedisClient struct {
 	Client *redis.Client
 }
 
+// This function will return a new Redis Cache Client
 func NewRedisClient(addr string, password string, index int) *RedisClient {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     addr,
@@ -30,6 +31,7 @@ func NewRedisClient(addr string, password string, index int) *RedisClient {
 	return &RedisClient{Client: rdb}
 }
 
+// This function will set a Key-value pair in Redis Cache
 func SetRedisKey[T any](r *RedisClient, ctx context.Context, key string, value *T) {
 	json, err := json.Marshal(value)
 	if err != nil {
@@ -40,6 +42,7 @@ func SetRedisKey[T any](r *RedisClient, ctx context.Context, key string, value *
 	}
 }
 
+// This function will fetch the value for a key from Redis Cache
 func GetRedisKey[T any](r *RedisClient, ctx context.Context, key string) *T {
 	if r.Client != nil {
 		val, err := r.Client.Get(ctx, key).Result()
@@ -56,18 +59,21 @@ func GetRedisKey[T any](r *RedisClient, ctx context.Context, key string) *T {
 	return nil
 }
 
+// This function will delete a key-value pair from Redis Cache
 func DeleteRedisKey(r *RedisClient, ctx context.Context, key string) {
 	if r.Client != nil {
 		r.Client.Del(ctx, key)
 	}
 }
 
+// This function will flush all Key-Value pairs from all indexes of a Redis Cache.
 func FlushAllRedisDBs(r *RedisClient, ctx context.Context) {
 	if r.Client != nil {
 		r.Client.FlushAll(ctx)
 	}
 }
 
+// This function will flush all Key-Value pairs of a particular index of a Redis Cache.
 func FlushCurrentRedisDB(r *RedisClient, ctx context.Context) {
 	if r.Client != nil {
 		r.Client.FlushDB(ctx)

@@ -14,13 +14,7 @@ import (
 	"github.com/creativecreature/sturdyc"
 )
 
-// type API struct {
-// 	*sturdyc.Client[string]
-// 	RedisClient   *RedisClient
-// 	DatabaseCalls uint64
-// 	RedisCalls    uint64
-// }
-
+// This struct variable will hold Local Cache and Redis Cache Clients.
 type API struct {
 	*sturdyc.Client[string]
 	RedisClient   *RedisClient
@@ -31,21 +25,7 @@ type API struct {
 	RedisDBIndex  int
 }
 
-// func NewAPI(addr string, password string, index int, capacity int, shards int, batchSize int,
-// 	batchBufferTimeout time.Duration, evictionPercentage int, maxRefreshDelay time.Duration,
-// 	minRefreshDelay time.Duration, retryBaseDelay time.Duration, ttl time.Duration) (*API, error) {
-
-// 	c := NewCacheClient(capacity, shards, batchSize, batchBufferTimeout, evictionPercentage,
-// 		maxRefreshDelay, minRefreshDelay, retryBaseDelay, ttl)
-
-// 	redisClient := NewRedisClient(addr, password, index)
-// 	if redisClient.Client == nil {
-// 		return &API{c, redisClient, 0, 0}, errors.New("error initializing redis client")
-// 	}
-
-// 	return &API{c, redisClient, 0, 0}, nil
-// }
-
+// This function will initiate a new Cache Client and a new Redis Client
 func NewAPI(addr string, password string, index int, capacity int, shards int, batchSize int,
 	batchBufferTimeout time.Duration, evictionPercentage int, maxRefreshDelay time.Duration,
 	minRefreshDelay time.Duration, retryBaseDelay time.Duration, ttl time.Duration) (*API, error) {
@@ -61,6 +41,8 @@ func NewAPI(addr string, password string, index int, capacity int, shards int, b
 	return &API{c, redisClient, 0, 0, addr, password, index}, nil
 }
 
+// This function will first check the key in local cache. If found, it will return the value and if not found,
+// it will check Redis cache. If found, will set the key and its value in local cache and returns it. Otherwise, it will return nil.
 func GetVal[T any](a *API, ctx context.Context, key string) (*T, error) {
 	fetchFn := func(ctx context.Context) (string, error) {
 		val := fetchFromRedis[T](a, ctx, key)
@@ -91,6 +73,7 @@ func GetVal[T any](a *API, ctx context.Context, key string) (*T, error) {
 	return &result, nil
 }
 
+// This function will check Redis cache for the key and if found, will return the value. Otherwise, it will return nil.
 func fetchFromRedis[T any](a *API, ctx context.Context, key string) *T {
 	atomic.AddUint64(&a.RedisCalls, 1)
 	if a.RedisClient == nil {
@@ -125,74 +108,8 @@ func ReturnNilOrZero[T any]() T {
 	return result
 }
 
-// func FetchData[T any](handler Handler, rserver string, rpwd string, rindex int, key string, fn any, args ...any) (T, error) {
-// 	if handler.GetAPI().RedisClient.Client == nil {
-// 		redisClient := NewRedisClient(rserver, rpwd, rindex)
-// 		if redisClient != nil {
-// 			handler.GetAPI().RedisClient = redisClient
-// 		}
-// 	}
-// 	values, _ := Fetch[T](handler.GetAPI(), key)
-// 	if values != nil {
-// 		return *values, nil
-// 	}
-// 	fnValue := reflect.ValueOf(fn)
-// 	fnType := fnValue.Type()
-
-// 	if len(args) != fnType.NumIn() {
-// 		return ReturnNilOrZero[T](), fmt.Errorf("expected %d arguments, got %d while calling function %v", fnType.NumIn(), len(args), runtime.FuncForPC(fnValue.Pointer()).Name())
-// 	}
-
-// 	in := make([]reflect.Value, len(args))
-// 	for i, arg := range args {
-// 		argValue := reflect.ValueOf(arg)
-// 		if argValue.Type() != fnType.In(i) {
-// 			return ReturnNilOrZero[T](), fmt.Errorf("argument %d expected type %s, got %s while calling function %v", i, fnType.In(i), argValue.Type(), runtime.FuncForPC(fnValue.Pointer()).Name())
-// 		}
-// 		in[i] = argValue
-// 	}
-
-// 	results := fnValue.Call(in)
-// 	if len(results) == 0 {
-// 		var zero *T
-// 		if handler.GetAPI().RedisClient != nil {
-// 			SetRedisKey[T](handler.GetAPI().RedisClient, context.Background(), key, zero)
-// 		}
-// 		SetLocalKey(handler.GetAPI().Client, context.Background(), key, zero)
-// 		return ReturnNilOrZero[T](), nil
-// 	}
-
-// 	if len(results) == 1 {
-// 		if err, ok := results[0].Interface().(error); ok {
-// 			return ReturnNilOrZero[T](), err
-// 		}
-// 		value, ok := results[0].Interface().(T)
-// 		if !ok {
-// 			return ReturnNilOrZero[T](), fmt.Errorf("expected return type %T, got %T", (*new(T)), results[0].Interface())
-// 		}
-// 		if handler.GetAPI().RedisClient != nil {
-// 			SetRedisKey[T](handler.GetAPI().RedisClient, context.Background(), key, &value)
-// 		}
-// 		SetLocalKey(handler.GetAPI().Client, context.Background(), key, &value)
-// 		return value, nil
-// 	}
-// 	if len(results) == 2 {
-// 		value, ok := results[0].Interface().(T)
-// 		if !ok {
-// 			return ReturnNilOrZero[T](), fmt.Errorf("expected return type %T, got %T", (*new(T)), results[0].Interface())
-// 		}
-// 		if err, ok := results[1].Interface().(error); ok && err != nil {
-// 			return ReturnNilOrZero[T](), err
-// 		}
-// 		if handler.GetAPI().RedisClient != nil {
-// 			SetRedisKey[T](handler.GetAPI().RedisClient, context.Background(), key, &value)
-// 		}
-// 		SetLocalKey(handler.GetAPI().Client, context.Background(), key, &value)
-// 		return value, nil
-// 	}
-// 	return ReturnNilOrZero[T](), nil
-// }
-
+// This function will follow Lazy Loading Principle where it will first check the key in local cache and if not found
+// it will check Redis cache. If not found, then it will fall back to database
 func FetchData[T any](handler Handler, key string, fn any, args ...any) (T, error) {
 	if handler.GetAPI().RedisClient.Client == nil {
 		redisClient := NewRedisClient(handler.GetAPI().RedisServer, handler.GetAPI().RedisPassword, handler.GetAPI().RedisDBIndex)
