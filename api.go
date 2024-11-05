@@ -14,12 +14,37 @@ import (
 	"github.com/creativecreature/sturdyc"
 )
 
+// type API struct {
+// 	*sturdyc.Client[string]
+// 	RedisClient   *RedisClient
+// 	DatabaseCalls uint64
+// 	RedisCalls    uint64
+// }
+
 type API struct {
 	*sturdyc.Client[string]
 	RedisClient   *RedisClient
 	DatabaseCalls uint64
 	RedisCalls    uint64
+	RedisServer   string
+	RedisPassword string
+	RedisDBIndex  int
 }
+
+// func NewAPI(addr string, password string, index int, capacity int, shards int, batchSize int,
+// 	batchBufferTimeout time.Duration, evictionPercentage int, maxRefreshDelay time.Duration,
+// 	minRefreshDelay time.Duration, retryBaseDelay time.Duration, ttl time.Duration) (*API, error) {
+
+// 	c := NewCacheClient(capacity, shards, batchSize, batchBufferTimeout, evictionPercentage,
+// 		maxRefreshDelay, minRefreshDelay, retryBaseDelay, ttl)
+
+// 	redisClient := NewRedisClient(addr, password, index)
+// 	if redisClient.Client == nil {
+// 		return &API{c, redisClient, 0, 0}, errors.New("error initializing redis client")
+// 	}
+
+// 	return &API{c, redisClient, 0, 0}, nil
+// }
 
 func NewAPI(addr string, password string, index int, capacity int, shards int, batchSize int,
 	batchBufferTimeout time.Duration, evictionPercentage int, maxRefreshDelay time.Duration,
@@ -30,10 +55,10 @@ func NewAPI(addr string, password string, index int, capacity int, shards int, b
 
 	redisClient := NewRedisClient(addr, password, index)
 	if redisClient.Client == nil {
-		return &API{c, redisClient, 0, 0}, errors.New("error initializing redis client")
+		return &API{c, redisClient, 0, 0, "", "", 0}, errors.New("error initializing redis client")
 	}
 
-	return &API{c, redisClient, 0, 0}, nil
+	return &API{c, redisClient, 0, 0, addr, password, index}, nil
 }
 
 func GetVal[T any](a *API, ctx context.Context, key string) (*T, error) {
