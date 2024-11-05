@@ -17,6 +17,7 @@ import "github.com/abinay-ps/cache"
 ```
 
 ## Index
+```go
 func DeleteLocalKey(c *sturdyc.Client[string], ctx context.Context, key string)
 func DeleteRedisKey(r *RedisClient, ctx context.Context, key string)
 func Fetch[T any](api *API, key string) (*T, error)
@@ -31,7 +32,30 @@ func SetLocalKey[T any](c *sturdyc.Client[string], ctx context.Context, key stri
 func SetRedisKey[T any](r *RedisClient, ctx context.Context, key string, value *T)
 func NewAPI(addr string, password string, index int, capacity int, shards int, batchSize int, batchBufferTimeout time.Duration, evictionPercentage int, maxRefreshDelay time.Duration, minRefreshDelay time.Duration, retryBaseDelay time.Duration, ttl time.Duration) (*API, error)
 func NewRedisClient(addr string, password string, index int) *RedisClient
+```
 
+## Interface: type Handler
+```go
+type Handler interface {
+    GetAPI() *API
+}
+```
+
+## Struct Definition: type API
+This struct variable will hold Local Cache and Redis Cache Clients.
+```go
+type API struct {
+    *sturdyc.Client[string]
+    RedisClient   *RedisClient
+    DatabaseCalls uint64
+    RedisCalls    uint64
+    RedisServer   string
+    RedisPassword string
+    RedisDBIndex  int
+}
+```
+
+## Functions
 ## func DeleteLocalKey
 ```go
 func DeleteLocalKey(c *sturdyc.Client[string], ctx context.Context, key string)
@@ -94,20 +118,6 @@ func SetRedisKey[T any](r *RedisClient, ctx context.Context, key string, value *
 ```
 This function will set a Key-value pair in Redis Cache
 
-## Struct Definition: type API
-This struct variable will hold Local Cache and Redis Cache Clients.
-```go
-type API struct {
-    *sturdyc.Client[string]
-    RedisClient   *RedisClient
-    DatabaseCalls uint64
-    RedisCalls    uint64
-    RedisServer   string
-    RedisPassword string
-    RedisDBIndex  int
-}
-```
-
 ## func NewAPI
 ```go
 func NewAPI(addr string, password string, index int, capacity int, shards int, batchSize int,
@@ -115,13 +125,6 @@ func NewAPI(addr string, password string, index int, capacity int, shards int, b
     minRefreshDelay time.Duration, retryBaseDelay time.Duration, ttl time.Duration) (*API, error)
 ```
 This function will initiate a new Cache Client and a new Redis Client
-
-## Interface: type Handler
-```go
-type Handler interface {
-    GetAPI() *API
-}
-```
 
 ## func NewRedisClient
 ```go
