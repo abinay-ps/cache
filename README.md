@@ -1,5 +1,5 @@
 # Cache Library for IT 2.0 application
-This library aims to achieve cache implementation for improving API performance by reducing latency and load on the database. This will be achieved by introducing a two-layer caching system: Redis Cache (shared cache) and Local Cache (instance-specific cache). The cache layers will store frequently accessed data to minimize repeated database calls and improve response times. A single function "FetchData" can be used instead of calling repo functions for Cache benefits.
+This library aims to achieve cache implementation for improving API performance by reducing latency and load on the database. This will be achieved by introducing a two-layer caching system: Redis Cache (shared cache) and Local Cache (instance-specific cache). The cache layers will store frequently accessed data to minimize repeated database calls and improve response times. A single function "FetchData" can be used instead of calling repo functions for Cache implementation.
 
 ## Installation
 To install Cache Library, run:
