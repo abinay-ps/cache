@@ -20,31 +20,31 @@ import "github.com/abinay-ps/cache"
 ```go
 func DeleteLocalKey(c *sturdyc.Client[string], ctx context.Context, key string)
 func DeleteRedisKey(r *RedisClient, ctx context.Context, key string)
-func Fetch[T any](api *API, key string) (*T, error)
+func Fetch[T any](cache *Cache, key string) (*T, error)
 func FetchData[T any](handler Handler, key string, fn any, args ...any) (T, error)
 func FlushAllRedisDBs(r *RedisClient, ctx context.Context)
 func FlushCurrentRedisDB(r *RedisClient, ctx context.Context)
 func GetRedisKey[T any](r *RedisClient, ctx context.Context, key string) *T
-func GetVal[T any](a *API, ctx context.Context, key string) (*T, error)
+func GetVal[T any](a *Cache, ctx context.Context, key string) (*T, error)
 func NewCacheClient(capacity int, shards int, batchSize int, batchBufferTimeout time.Duration, evictionPercentage int, maxRefreshDelay time.Duration, minRefreshDelay time.Duration, retryBaseDelay time.Duration, ttl time.Duration) *sturdyc.Client[string]
 func ReturnNilOrZero[T any]() T
 func SetLocalKey[T any](c *sturdyc.Client[string], ctx context.Context, key string, value *T)
 func SetRedisKey[T any](r *RedisClient, ctx context.Context, key string, value *T)
-func NewAPI(addr string, password string, index int, capacity int, shards int, batchSize int, batchBufferTimeout time.Duration, evictionPercentage int, maxRefreshDelay time.Duration, minRefreshDelay time.Duration, retryBaseDelay time.Duration, ttl time.Duration) (*API, error)
+func NewCache(addr string, password string, index int, capacity int, shards int, batchSize int, batchBufferTimeout time.Duration, evictionPercentage int, maxRefreshDelay time.Duration, minRefreshDelay time.Duration, retryBaseDelay time.Duration, ttl time.Duration) (*Cache, error)
 func NewRedisClient(addr string, password string, index int) *RedisClient
 ```
 
 ## Interface: type Handler
 ```go
 type Handler interface {
-    GetAPI() *API
+    GetCache() *Cache
 }
 ```
 
-## Struct Definition: type API
+## Struct Definition: type Cache
 This struct variable will hold Local Cache and Redis Cache Clients.
 ```go
-type API struct {
+type Cache struct {
     *sturdyc.Client[string]
     RedisClient   *RedisClient
     DatabaseCalls uint64
@@ -94,7 +94,7 @@ This function will fetch the value for a key from Redis Cache
 
 ## func GetVal
 ```go
-func GetVal[T any](a *API, ctx context.Context, key string) (*T, error)
+func GetVal[T any](a *Cache, ctx context.Context, key string) (*T, error)
 ```
 This function will first check the key in local cache. If found, it will return the value and if not found, it will check Redis cache. If found, will set the key and its value in local cache and returns it. Otherwise, it will return nil.
 
@@ -118,11 +118,11 @@ func SetRedisKey[T any](r *RedisClient, ctx context.Context, key string, value *
 ```
 This function will set a Key-value pair in Redis Cache
 
-## func NewAPI
+## func NewCache
 ```go
-func NewAPI(addr string, password string, index int, capacity int, shards int, batchSize int,
+func NewCache(addr string, password string, index int, capacity int, shards int, batchSize int,
     batchBufferTimeout time.Duration, evictionPercentage int, maxRefreshDelay time.Duration,
-    minRefreshDelay time.Duration, retryBaseDelay time.Duration, ttl time.Duration) (*API, error)
+    minRefreshDelay time.Duration, retryBaseDelay time.Duration, ttl time.Duration) (*Cache, error)
 ```
 This function will initiate a new Cache Client and a new Redis Client
 
@@ -131,3 +131,15 @@ This function will initiate a new Cache Client and a new Redis Client
 func NewRedisClient(addr string, password string, index int) *RedisClient
 ```
 This function will return a new Redis Cache Client
+
+## Contributing
+
+We welcome contributions! To contribute:
+
+1. Fork the repository.
+2. Create a new branch for making corrections.
+3. Submit a pull request.
+
+## License
+
+This project is owned by CEPT, Department of Posts.
