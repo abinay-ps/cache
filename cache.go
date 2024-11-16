@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/creativecreature/sturdyc"
+	"github.com/gin-gonic/gin"
 )
 
 // This struct variable will hold Local Cache and Redis Cache Clients.
@@ -83,13 +84,13 @@ func fetchFromRedis[T any](a *Cache, ctx context.Context, key string) *T {
 	return descriptions
 }
 
-func Fetch[T any](cache *Cache, key string) (*T, error) {
+func Fetch[T any](cache *Cache, ctx *gin.Context, key string) (*T, error) {
 	var wg sync.WaitGroup
 	var values *T
 	var err error
 	wg.Add(1)
 	go func() {
-		values, err = GetVal[T](cache, context.Background(), key)
+		values, err = GetVal[T](cache, ctx.Request.Context(), key)
 		wg.Done()
 	}()
 	wg.Wait()
@@ -110,14 +111,14 @@ func ReturnNilOrZero[T any]() T {
 
 // This function will follow Lazy Loading Principle where it will first check the key in local cache and if not found
 // it will check Redis cache. If not found, then it will fall back to database
-func FetchData[T any](handler Handler, key string, fn any, args ...any) (T, error) {
+func FetchData[T any](ctx *gin.Context, handler Handler, key string, fn any, args ...any) (T, error) {
 	if handler.GetCache().RedisClient.Client == nil {
 		redisClient := NewRedisClient(handler.GetCache().RedisServer, handler.GetCache().RedisPassword, handler.GetCache().RedisDBIndex)
 		if redisClient != nil {
 			handler.GetCache().RedisClient = redisClient
 		}
 	}
-	values, _ := Fetch[T](handler.GetCache(), key)
+	values, _ := Fetch[T](handler.GetCache(), ctx, key)
 	if values != nil {
 		return *values, nil
 	}
@@ -141,9 +142,9 @@ func FetchData[T any](handler Handler, key string, fn any, args ...any) (T, erro
 	if len(results) == 0 {
 		var zero *T
 		if handler.GetCache().RedisClient != nil {
-			SetRedisKey[T](handler.GetCache().RedisClient, context.Background(), key, zero)
+			SetRedisKey[T](handler.GetCache().RedisClient, ctx.Request.Context(), key, zero)
 		}
-		SetLocalKey(handler.GetCache().Client, context.Background(), key, zero)
+		SetLocalKey(handler.GetCache().Client, key, zero)
 		return ReturnNilOrZero[T](), nil
 	}
 
@@ -156,9 +157,9 @@ func FetchData[T any](handler Handler, key string, fn any, args ...any) (T, erro
 			return ReturnNilOrZero[T](), fmt.Errorf("expected return type %T, got %T", (*new(T)), results[0].Interface())
 		}
 		if handler.GetCache().RedisClient != nil {
-			SetRedisKey[T](handler.GetCache().RedisClient, context.Background(), key, &value)
+			SetRedisKey[T](handler.GetCache().RedisClient, ctx.Request.Context(), key, &value)
 		}
-		SetLocalKey(handler.GetCache().Client, context.Background(), key, &value)
+		SetLocalKey(handler.GetCache().Client, key, &value)
 		return value, nil
 	}
 	if len(results) == 2 {
@@ -170,9 +171,9 @@ func FetchData[T any](handler Handler, key string, fn any, args ...any) (T, erro
 			return ReturnNilOrZero[T](), err
 		}
 		if handler.GetCache().RedisClient != nil {
-			SetRedisKey[T](handler.GetCache().RedisClient, context.Background(), key, &value)
+			SetRedisKey[T](handler.GetCache().RedisClient, ctx.Request.Context(), key, &value)
 		}
-		SetLocalKey(handler.GetCache().Client, context.Background(), key, &value)
+		SetLocalKey(handler.GetCache().Client, key, &value)
 		return value, nil
 	}
 	return ReturnNilOrZero[T](), nil
