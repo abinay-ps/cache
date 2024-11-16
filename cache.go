@@ -111,7 +111,7 @@ func ReturnNilOrZero[T any]() T {
 
 // This function will follow Lazy Loading Principle where it will first check the key in local cache and if not found
 // it will check Redis cache. If not found, then it will fall back to database
-func FetchData[T any](ctx *gin.Context, handler Handler, key string, fn any, args ...any) (T, error) {
+func FetchData1[T any](ctx *gin.Context, handler Handler, key string, fn any, args ...any) (T, error) {
 	if handler.GetCache().RedisClient.Client == nil {
 		redisClient := NewRedisClient(handler.GetCache().RedisServer, handler.GetCache().RedisPassword, handler.GetCache().RedisDBIndex)
 		if redisClient != nil {
